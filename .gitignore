@@ -1,0 +1,22 @@
+# ignore data
+*.csv
+
+# ignore notes
+*.txt
+*.md
+
+# don't ignore the readme
+!README.md
+
+# ignore testing files
+main.py
+timetests.py
+
+# ignore irrelevant directories
+/unused/*
+/.idea/*
+/.ipynb_checkpoints
+
+# ignore IDE files
+*.iml
+*.xml
