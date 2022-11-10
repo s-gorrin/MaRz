@@ -17,6 +17,9 @@ def get_alpha(an_input, some_data, index_table, base_fuzzy, num_data_points, max
     POST 2: the dataset is searched per column using numpy
 
     RETURN: the alpha value that was found, and the list of indices in the hyper-rectangle defined by alpha
+
+    KNOWN ISSUE: any column with all the same value will yield an alpha of 1 with no points.
+        this issue has been accounted for with the pre-processing step of removing any constant column from the dataset
     """
     data_width = len(an_input)
 
@@ -40,11 +43,6 @@ def get_alpha(an_input, some_data, index_table, base_fuzzy, num_data_points, max
             # do the binary search for the range for this column c
             table_low = np.searchsorted(some_data[:, c], min_fuzzy[c], sorter=index_table[:, c])
             table_high = np.searchsorted(some_data[:, c], max_fuzzy[c], sorter=index_table[:, c])
-
-            # search sorted gets the index after, so adjust if necessary
-            # if table_high == some_data.shape[0] or some_data[index_table[table_high][c]][c] > max_fuzzy[c]:
-            #    table_high -= 1
-            # if this is necessary, then use table_high + 1 below in the slice
 
             indices_in_range.append(set(index_table[table_low:table_high, c]))  # values in range of the column
 
@@ -79,7 +77,7 @@ class GetAlphaTests(unittest.TestCase):
                        [8, 8, 3],
                        [9, 9, 3]]
 
-        index_table_1 = generate_index_table(some_data_1)
+        some_data_1, index_table_1 = generate_index_table(some_data_1)
         base_fuzzy = get_base_fuzzy(some_data_1)
         an_input_1 = np.array([5, 5])
 
@@ -98,7 +96,7 @@ class GetAlphaTests(unittest.TestCase):
                        [8, 2, 3],
                        [9, 1, 3]]
 
-        index_table_2 = generate_index_table(some_data_2)
+        some_data_2, index_table_2 = generate_index_table(some_data_2)
 
         # same test as 1, but data is inherently non-sortable
         values_2 = get_alpha(an_input_1, some_data_2, index_table_2, base_fuzzy, 4, 10)
@@ -121,8 +119,8 @@ class GetAlphaTests(unittest.TestCase):
                        [4.8, 3.3, 2.3, 1.3, 2.0],
                        [4.9, 3.4, 2.4, 1.4, 2.0],
                        [5.0, 3.5, 2.5, 1.5, 2.0],
-                       [5.1, 3.6, 2.6, 1.6, 2.0]]
-        index_table_4 = generate_index_table(some_data_4)
+                       [5.1, 3.6, 2.6, 1.6, 2.01]]
+        some_data_4, index_table_4 = generate_index_table(some_data_4)
         an_input_4 = np.array([4.5, 3.0, 2.0, 1.0])
         base_fuzzy_4 = get_base_fuzzy(some_data_4)
 
@@ -149,9 +147,9 @@ class GetAlphaTests(unittest.TestCase):
                        [4.7, 3.2, 2.2, 1.2, 2.0],
                        [4.1, 2.6, 1.6, 0.6, 2.0],
                        [4.2, 2.7, 1.7, 0.7, 2.0],
-                       [5.1, 3.6, 2.6, 1.6, 2.0]]
+                       [5.1, 3.6, 2.6, 1.6, 2.01]]
 
-        index_table_6 = generate_index_table(some_data_6)
+        some_data_6, index_table_6 = generate_index_table(some_data_6)
 
         values_6 = get_alpha(an_input_4, some_data_6, index_table_6, base_fuzzy_4, 4, 10)
         assert(values_6[0] * 1.2 < 0.5)
@@ -161,7 +159,7 @@ class GetAlphaTests(unittest.TestCase):
         # this shows that the same data will find the same lines for the same input
         # regardless of the order of the data
         for i in range(4):
-            assert(some_data_4[values_4[1][i]] == some_data_6[values_6[1][i]])
+            assert(some_data_4[values_4[1][i]][i] == some_data_6[values_6[1][i]][i])
 
         # test with real iris data
         some_data_7 = [[5.4, 3.9, 1.7, 0.4, 1.0],
@@ -191,7 +189,7 @@ class GetAlphaTests(unittest.TestCase):
                        [5.8, 4.0, 1.2, 0.2, 1.0],
                        [5.9, 3.0, 4.2, 1.5, 2.0]]
 
-        index_table_7 = generate_index_table(some_data_7)
+        some_data_7, index_table_7 = generate_index_table(some_data_7)
         an_input_7 = np.array([5.7, 2.6, 3.5, 1.0])  # target for this input is 2.0
         base_fuzzy_7 = get_base_fuzzy(some_data_7)
 
