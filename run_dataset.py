@@ -7,6 +7,31 @@ This allows full datasets to be run consistently for testing purposes.
 """
 
 
+def extract_test_line(some_data, index_table, test_row_number):
+    """
+    INTENT: create a "test split" for the some_data by extracting the test_row_number from the data and index table
+
+    PRE 1: some_data is a some_data and index_table is a sorter table for that some_data
+    PRE 2: some_data and index_table are the same shape as defined by numpy
+    PRE 3: test_row_number is an index within some_data and index_table
+
+    POST 1: the line indicated by test_row_number is removed from some_data
+    POST 2: test_row_number is removed from the index_table and later rows are shifted up to fill in the gap
+
+    RETURN: the reduced some_data, the reduced sorter, the test line
+    """
+    row = some_data[test_row_number]
+    an_input = (row[:-1], row[-1])  # test row as a tuple: input, target
+    trimmed_data = np.delete(some_data, test_row_number, axis=0)  # remove the test row
+
+    # remove the test_row_number, a critical step
+    tp = index_table.T
+    tp = tp[tp != test_row_number].reshape(trimmed_data.shape[1], trimmed_data.shape[0]).T
+    trimmed_table = np.subtract(tp, 1, where=(tp > test_row_number), out=tp.copy())
+
+    return trimmed_data, trimmed_table, an_input
+
+
 def preprocessing(some_data):
     """
     INTENT: do the preprocessing steps for running a dataset
