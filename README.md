@@ -8,19 +8,17 @@ versions and not testing files.
 * `numpy` (for dataset management)
 * `unittest` (for testing)
 
+## Format and Preprocessing
+In order to ensure compatibility, datasets should be formatted as 2D numpy arrays with rows of inputs
+and columns of attributes. The last column of the dataset should be the target outputs of the data.
+
+The preprocessing done in `dataset_preprocessing.generate_index_table` creates a sorter table of indices
+of the dataset and fills it with columns where-in each column is the indices of the corresponding column
+of the data set, in the order they would be in if the dataset were sorted (stable) by that column. This
+step also removes any columns from the dataset for which every value in the column is the same. All
+steps of the MaRz process assume that every column of data contains at least two distinct values.
+
 ## Publicity
 This is currently a private repository. Proper project documentation and crediting
 will need to be added if it is ever made public.
 
-
-### In-progress notes
-`get_alpha_sorted` is working, but running full-scale tests requires some extra steps
-in order to run. For each removed (testing) line of the dataset, the index table needs
-to not have that line. If the line is simply deleted from the dataset, then that index
-number must be removed from the table and then all indices after it must be shifted back
-to remove the gap.
-
-My current best alternative is to change the testing line to out-of-range values, and then
-move each instance of that line to the end of the index table. This should work, but I am
-looking for an efficient way to accomplish it, since the current plan involves a lot of
-operations on the index table.
