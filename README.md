@@ -14,9 +14,10 @@ and columns of attributes. The last column of the dataset should be the target o
 
 The preprocessing done in `dataset_preprocessing.generate_index_table` creates a sorter table of indices
 of the dataset and fills it with columns where-in each column is the indices of the corresponding column
-of the data set, in the order they would be in if the dataset were sorted (stable) by that column. This
-step also removes any columns from the dataset for which every value in the column is the same. All
-steps of the MaRz process assume that every column of data contains at least two distinct values.
+of the data set, in the order they would be in if the dataset were sorted (stable) by that column.
+
+In order to handle columns where every value is the same, the base_fuzzy
+for that column is converted from 0 to 0.000001, to prevent division by 0 downstream.
 
 ## Publicity
 This is currently a private repository. Proper project documentation and crediting
