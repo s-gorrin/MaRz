@@ -11,10 +11,9 @@ def generate_index_table(some_data):
 
     POST 1: an ID column is added to some_data to preserve original index order
     POST 2: each column is stable sorted and the new order of the ID column is added to the output array
-    POST 3: any column which contains the same value in every row is removed from the dataset and index_table
 
-    RETURN: some_data less constant columns (if any), a numpy array of the same size as some_data,
-        with each column containing the IDs of some_data in the order attained by sorting on the given column
+    RETURN: a numpy array of the same size as some_data with each column containing the IDs
+            of some_data in the order attained by sorting on the given column
     """
     length = len(some_data)
     width = len(some_data[0])
@@ -23,21 +22,11 @@ def generate_index_table(some_data):
     some_data = np.concatenate((some_data, ids), axis=1)
 
     index_table = np.empty((length, width), int)  # create an empty array of some_data.shape to store ints
-    columns_to_remove = []
+
     for column in range(width):  # this will exclude the new IDs column, but include any targets
-        if np.all(some_data[:, column] == some_data[0, column]):
-            # if a full column has the same value, disregard it and remove it from the data
-            columns_to_remove.append(column)
-        else:
-            index_table[:, column] = some_data[some_data[:, column].argsort(kind='stable')][:, -1]
+        index_table[:, column] = some_data[some_data[:, column].argsort(kind='stable')][:, -1]
 
-    for i in range(len(columns_to_remove)):
-        # each removal reduces the index of subsequent columns
-        column = columns_to_remove[i] - i  # this line corrects the error
-        index_table = np.delete(index_table, column, axis=1)
-        some_data = np.delete(some_data, column, axis=1)
-
-    return some_data[:, :-1], index_table
+    return index_table
 
 
 def get_base_fuzzy(some_data):
@@ -49,10 +38,15 @@ def get_base_fuzzy(some_data):
     POST 1: a list of column ranges is obtained by subtracting the min of each column from the max
 
     RETURN: the base fuzzy ranges for the dataset
+
+    KNOWN ISSUE: if a column has all one value in it, the base fuzzy for that column will be 0.
+        This would cause a division by zero error downstream, so those 0s are replaced with 0.000001.
     """
     min_per_col = np.min(some_data, 0)[:-1]
     max_per_col = np.max(some_data, 0)[:-1]
-    return max_per_col - min_per_col
+    base_fuzzy = max_per_col - min_per_col
+    base_fuzzy[base_fuzzy == 0] = 0.000001  # convert 0s in the base fuzzy to very small numbers
+    return base_fuzzy
 
 
 class Tests(unittest.TestCase):
@@ -84,11 +78,11 @@ class Tests(unittest.TestCase):
                   [9, 5, 3]]
 
     def test_generate_index_table(self):
-        data_set_1, output_1 = generate_index_table(self.data_set_1)
+        output_1 = generate_index_table(self.data_set_1)
         assert(output_1[0][0] == 0)
         assert(output_1[7][1] == 7)
 
-        data_set_2, output_2 = generate_index_table(self.data_set_2)
+        output_2 = generate_index_table(self.data_set_2)
         assert(output_2[0][0] == 0)
         assert(output_2[7][0] == 7)
         assert(output_2[0][1] == 7)
@@ -96,9 +90,8 @@ class Tests(unittest.TestCase):
 
         assert(np.array(self.data_set_1).shape == (8, 3))  # show that the some_data is not changed
 
-        data_set_3, output_3 = generate_index_table(self.data_set_3)
-        assert(data_set_3.shape[1] == 2)
-        assert(output_3.shape[1] == 2)
+        output_3 = generate_index_table(self.data_set_3)
+        assert(output_3.shape[1] == 3)
 
     def test_get_base_fuzzy(self):
         output_1 = get_base_fuzzy(self.data_set_1)

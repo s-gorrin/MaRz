@@ -37,10 +37,10 @@ def preprocessing(some_data):
     INTENT: do the preprocessing steps for running a dataset
     RETURN: the index_table and base_fuzzy
     """
-    updated_data, index_table = generate_index_table(some_data)
-    base_fuzzy = get_base_fuzzy(updated_data)
+    index_table = generate_index_table(some_data)
+    base_fuzzy = get_base_fuzzy(some_data)
 
-    return updated_data, index_table, base_fuzzy
+    return index_table, base_fuzzy
 
 
 def run_dataset(some_data, index_table, base_fuzzy, points=2, close_threshold=0.1, start=0, step=1):
