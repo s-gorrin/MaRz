@@ -32,6 +32,11 @@ def extract_test_line(some_data, index_table, test_row_number):
     return trimmed_data, trimmed_table, an_input
 
 
+def perc(x, total):
+    # make getting percentages easier since it's happening a few times
+    return (x / total) * 100
+
+
 def preprocessing(some_data):
     """
     INTENT: do the preprocessing steps for running a dataset
@@ -64,6 +69,7 @@ def run_dataset(some_data, index_table, base_fuzzy, points=2, close_threshold=0.
     close_lines = []
     print_lines = True
     lines_run = 0
+    points_count = [0, 0, 0]
 
     print(f'points sought: {points}, threshold for "close result": {close_threshold}')
 
@@ -72,6 +78,13 @@ def run_dataset(some_data, index_table, base_fuzzy, points=2, close_threshold=0.
 
         alpha, indices = get_alpha(test[0], trimmed_data, trimmed_table, base_fuzzy, points, max_iterations=10)
         output = get_output(test[0], trimmed_data, base_fuzzy * alpha, indices)
+
+        if len(indices) == points:
+            points_count[0] += 1
+        elif len(indices) == points + 1:
+            points_count[1] += 1
+        else:
+            points_count[2] += 1
 
         difference = abs(output - test[1])
         if difference < close_threshold:
@@ -88,4 +101,8 @@ def run_dataset(some_data, index_table, base_fuzzy, points=2, close_threshold=0.
 
         lines_run += 1
 
-    print(f"{close} close results of {lines_run} lines, or {(close / lines_run) * 100:.2f}%")
+    print(f"{close} close results of {lines_run} lines, or {perc(close, lines_run):.2f}%")
+    print(f"points requested: {points}\nnumber with {points} points found: "
+          f"{points_count[0]} or {perc(points_count[0], lines_run):.2f}%\n"
+          f"number with {points + 1} points found: {points_count[1]} or {perc(points_count[1], lines_run):.2f}%\n"
+          f"number with more points found: {points_count[2]} or {perc(points_count[2], lines_run):.2f}%\n")
