@@ -10,7 +10,7 @@
 
 # ignore testing files
 main.py
-timetests.py
+*test.py
 
 # ignore irrelevant directories
 /unused/*
