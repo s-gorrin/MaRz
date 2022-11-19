@@ -105,4 +105,4 @@ def run_dataset(some_data, index_table, base_fuzzy, points=2, close_threshold=0.
     print(f"points requested: {points}\nnumber with {points} points found: "
           f"{points_count[0]} or {perc(points_count[0], lines_run):.2f}%\n"
           f"number with {points + 1} points found: {points_count[1]} or {perc(points_count[1], lines_run):.2f}%\n"
-          f"number with more points found: {points_count[2]} or {perc(points_count[2], lines_run):.2f}%\n")
+          f"number with more points found: {points_count[2]} or {perc(points_count[2], lines_run):.2f}%")
