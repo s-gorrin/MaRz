@@ -1,6 +1,6 @@
 from dataset_preprocessing import *
 from get_alpha_sorted import get_alpha
-from new_get_output import get_output
+from marz_get_output import get_output
 
 """
 This allows full datasets to be run consistently for testing purposes.
@@ -67,11 +67,12 @@ def run_dataset(some_data, index_table, base_fuzzy, points=2, close_threshold=0.
 
     close = 0
     close_lines = []
-    print_lines = True
+    print_lines = False
     lines_run = 0
     points_count = [0, 0, 0]
-
-    print(f'points sought: {points}, threshold for "close result": {close_threshold}')
+    # gathering both of these together in case of partial runs
+    targets = []
+    outputs = []
 
     for i in range(start, length, step):
         trimmed_data, trimmed_table, test = extract_test_line(some_data, index_table, i)
@@ -99,10 +100,15 @@ def run_dataset(some_data, index_table, base_fuzzy, points=2, close_threshold=0.
             print(f"{i:4}) alpha: {alpha:.3f}, points: {len(indices):2}\t"
                   f"output: {output:.3f}\ttarget: {test[1]:.3f}\tdiff: {difference:.3f}{end}")
 
+        targets.append(test[1])  # add target, output to the loss vectors
+        outputs.append(output)   # to compute accuracy (R-Square, Mean Square, etc)
         lines_run += 1
 
+    print(f'threshold for "close result": {close_threshold}')
     print(f"{close} close results of {lines_run} lines, or {perc(close, lines_run):.2f}%")
     print(f"points requested: {points}\nnumber with {points} points found: "
           f"{points_count[0]} or {perc(points_count[0], lines_run):.2f}%\n"
           f"number with {points + 1} points found: {points_count[1]} or {perc(points_count[1], lines_run):.2f}%\n"
           f"number with more points found: {points_count[2]} or {perc(points_count[2], lines_run):.2f}%")
+
+    return targets, outputs
