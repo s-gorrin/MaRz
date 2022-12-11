@@ -10,8 +10,11 @@ Compare R-Square Value with those on page 10 of this paper:
 """
 
 import pandas as pd
+import numpy as np
 import time
 from sklearn.metrics import r2_score, mean_squared_error
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from run_dataset import run_dataset, preprocessing
 
@@ -38,3 +41,11 @@ print(f"\nComputation time (seconds): {end - start:.4f}")
 r_square = r2_score(y_actual, y_predicted)
 print(f"R-Square Value: {r_square:.5f}")
 print(f"Mean Squared Error: {mean_squared_error(y_actual, y_predicted):.5f}")
+
+loss = np.array(y_predicted) - np.array(y_actual)
+
+reg = sns.regplot(x=y_actual, y=y_predicted, line_kws={'color': 'red'}, scatter_kws={'alpha': 0.3})
+reg.set(xlabel='Actual (dB)', ylabel='Predicted (dB)')
+reg.set(title='Airfoil Noise Regression Predictions vs Actual')
+
+plt.show()
