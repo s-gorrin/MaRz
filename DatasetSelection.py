@@ -15,9 +15,9 @@ class DatasetSelection:
 
     base_fuzzy = []
 
-    def __init__(self, ds_name='cancer'):
+    def __init__(self, a_ds_name):
         """
-        POSTCONDITION 1: self.dataset is the data set defined by ds_name for
+        POSTCONDITION 1: self.dataset is the data set defined by a_ds_name for
             diabetes, iris, digits, or wine, otherwise it is breast cancer.
 
         POST 2: Datasets are in the form [[input list], [output list]]
@@ -26,13 +26,13 @@ class DatasetSelection:
         """
 
         # ---- POST 1
-        if ds_name == 'diabetes':
+        if a_ds_name == 'diabetes':
             data_set = datasets.load_diabetes()
-        elif ds_name == 'iris':
+        elif a_ds_name == 'iris':
             data_set = datasets.load_iris()
-        elif ds_name == 'digits':
+        elif a_ds_name == 'digits':
             data_set = datasets.load_digits()
-        elif ds_name == 'wine':
+        elif a_ds_name == 'wine':
             data_set = datasets.load_wine()
         else:
             data_set = datasets.load_breast_cancer()
