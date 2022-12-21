@@ -11,13 +11,13 @@ import seaborn as sns
 
 # Special note: defaults to breast cancer data set
 
-class ToyDatasets:
+class DatasetSelection:
 
     base_fuzzy = []
 
     def __init__(self, ds_name='cancer'):
         """
-        POST-CONDITION 1: self.dataset is the data set defined by ds_name for
+        POSTCONDITION 1: self.dataset is the data set defined by ds_name for
             diabetes, iris, digits, or wine, otherwise it is breast cancer.
 
         POST 2: Datasets are in the form [[input list], [output list]]
@@ -46,7 +46,7 @@ class ToyDatasets:
         self.calculate_base_fuzzy()
 
     def calculate_base_fuzzy(self):
-        # POST_CONDITION: self.base_fuzzy = ranges of the features in self.dataset
+        # POSTCONDITION: self.base_fuzzy = ranges of the features in self.dataset
 
         ds_min = np.min(self.dataset, 0)[:-1]
         ds_max = np.max(self.dataset, 0)[:-1]
@@ -54,27 +54,22 @@ class ToyDatasets:
 
 
 if __name__ == '__main__':
-    dataset_name = 'digits'
-    toy_dataset = ToyDatasets(dataset_name)
-    dataset = toy_dataset.dataset
 
-    index_table, base_fuzzy = preprocessing(dataset)
+    # POSTCONDITION 1 (MaRz Ran): Marz was run on 8x8 sklearn digits (Named miniMNIST here)
+    # POST 2 (Display): The resulting graph is on the monitor of actual vs. predicted digits
 
-    y_actual, y_predicted = run_dataset(dataset, index_table, base_fuzzy, points=1, close_threshold=0.1)
+    # ---- POST 1 (MaRz Ran)
+    dataset = DatasetSelection('digits').dataset
+    index_table, input_ranges = preprocessing(dataset)
+    y_actual, y_predicted = run_dataset(
+        dataset, index_table, input_ranges, points=1, close_threshold=0.1)
+
+    # ---- POST 2 (Display)
 
     resid = sns.regplot(x=y_actual, y=y_predicted,
                         scatter_kws={'alpha': 0.2},
                         line_kws={'color': 'red', 'alpha': 0.5})
     resid.set(xlabel='Actual Digit', ylabel='Predicted Digit')
-
     resid.set_xticks([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])  # digits numbers
     resid.set(title='Mini-MNIST Identification Accuracy')
-    """
-    # Iris plot settings
-    resid.set(xlabel='Iris Types', ylabel='Error')
-    resid.set(title='Iris Identification Accuracy')
-    resid.set_xticks([0, 1, 2])  # iris numbers
-    resid.set_xticklabels(['Setosa', 'Versicolor', 'Virginica'])  # iris labels
-    """
-
     plt.show()
