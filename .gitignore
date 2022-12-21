@@ -14,6 +14,7 @@ main.py
 
 # ignore irrelevant directories
 /unused/*
+/digit_images/*
 /.idea/*
 /.ipynb_checkpoints
 
