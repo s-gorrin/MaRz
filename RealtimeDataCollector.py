@@ -39,16 +39,24 @@ class RealtimeDataCollector:
         """
         INTENT: Add data to the data_ and sort_lists in simulated "real time."
 
-        PRE 1: self.input_dataset contains a dataset
+        PRECONDITION 1: self.input_dataset contains a dataset
+
+        POSTCONDITION 1: Add a stored full dataset to the growing dataset in "real time",
+            one line at a time
         """
         # prime class variables for the dataset
         self.data_width = self.input_dataset.shape[1]
         self.setup_lists()
 
+        # ---- POST 1
         for i in range(self.input_dataset.shape[0]):  # rows
             self.add_datum(self.input_dataset[i, :])
             print('.', end='')
-            time.sleep(0.24)  # might be replacing this with threading.Event.wait()
+
+            # with a 20/80 split, this means about 4 datapoints added per query
+            # this means that the dataset fills shortly before the queries run out,
+            #   since there is no point in adding more data after there are no more queries.
+            time.sleep(0.24)
 
     def add_datum(self, a_datum):
         """
@@ -56,22 +64,25 @@ class RealtimeDataCollector:
 
         PRE 1: a_datum is a list or array of len() == self.data_width.
 
-        POST 1: The a_datum is appended to the data_lists.
-        POST 2: The a_datum's index is sorted into sort_lists.
+        POSTCONDITION 1: The a_datum's index is sorted into sort_lists.
+        POST 2: The a_datum is appended to the data_lists.
         """
         datum_id = len(self.data_lists[0])
 
         if len(self.data_lists[0]) > 0:
             # the item is sorted into the sort_lists and then added to the data_lists
             for i in range(self.data_width):
+                # ---- POST 1
                 index = np.searchsorted(self.data_lists[i], a_datum[i], sorter=self.sort_lists[i])
                 # edge case: new index is at the end
                 if index == len(self.sort_lists[i]):
                     self.sort_lists[i].append(datum_id)
                 else:
                     self.sort_lists[i].insert(index, datum_id)
+
+                # ---- POST 2
                 self.data_lists[i].append(a_datum[i])
-        # edge case: adding the first item to the lists
+        # edge case: adding the first item to the lists (POST 1 and 2)
         else:
             for i in range(self.data_width):
                 self.data_lists[i].append(a_datum[i])
@@ -91,6 +102,9 @@ class RealtimeDataCollector:
 
 
 if __name__ == '__main__':
+    """
+    Test the data collector on a trivially small dataset.
+    """
     arr = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [3, 7], [9, 2], [1, 1], [11, 11]]
     stream_collector = RealtimeDataCollector(2)
     for row in arr:

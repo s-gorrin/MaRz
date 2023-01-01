@@ -30,6 +30,8 @@ def setup_realtime_collector(train_set):
     """
     INTENT: Create an instance of a RealtimeDataCollector with the training set.
 
+    PRECONDITION 1: train_set is a dataset appropriately formatted for MaRz operations.
+
     POSTCONDITION 1: a RealtimeDataCollector is instantiated and supplied with
         the train_set, and then returned.
     """
@@ -62,9 +64,17 @@ def send_test_set(test_set):
 
     PRECONDITION 1: test_set is a portion of a complete dataset, of which the other
         portion is the training set, which is populating the realtime collector.
+
+    POSTCONDITION 1: The collector is accessed to retrieve the current version of
+        the sorter and dataset.
+    POST 2: Each line of the test_set is given as input to the current version of the dataset.
+    POST 3: Each time a query is made, the result is printed, with a note indicating if it is correct.
+    POST 4: The thread is paused between queries.
     """
     for line in test_set:
         target = line[-1]
+
+        # ---- POST 1
         global collector
         sorter = collector.get_sorter()
         data = collector.get_data()
@@ -72,23 +82,45 @@ def send_test_set(test_set):
         #   added that is not in the sorter yet. Thus, get the sorter first, and
         #   then the data, and if they're not the same, trim the extra row off the data
         if not (data.shape == sorter.shape):
+            # this happens infrequently, but it can happen and is necessary
             data = data[:-1]
+
+        # ---- POST 2
         output = query_input(line[:-1], data, sorter)
         success = abs(target - output) < 0.5
+
+        # ---- POST 3
         print(f"\tfor target {int(target)}, got {output:.1f}{', which is correct!' if success else ''}")
+
+        # ---- POST 4
+        # one query per second seems like a reasonable pace
+        #   and leaves plenty of time for the collector
         time.sleep(1)
 
 
 if __name__ == '__main__':
-    training_set, testing_set = split_dataset(DatasetSelection('digits').dataset)
-    collector = setup_realtime_collector(training_set)
+    """
+    INTENT: Run the realtime experiment on the digits dataset.
+    
+    POSTCONDITION 1: The dataset is retrieved a split into a training set and a testing set.
+    POST 2: The collector is set up with the training set and a thread is initialized.
+    POST 3: The threads are started to run the experiment and results are printed to the console.
+    """
 
+    # ---- POST 1
+    training_set, testing_set = split_dataset(DatasetSelection('digits').dataset)
+
+    # ---- POST 2
+    collector = setup_realtime_collector(training_set)
     # set up a thread for filling up the training dataset
     collection_thread = threading.Thread(target=collector.realtime_data_input)
 
     print("Starting Experiment...")
+    print("Each '.' represents one additional datapoint added to the training set.\n"
+          "Every time a query is made, the result is printed and marked as correct if it is.")
+
+    # ---- POST 3
     # start the collector
     collection_thread.start()
-
     # the query process can use the main thread
     send_test_set(testing_set)
