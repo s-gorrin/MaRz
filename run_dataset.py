@@ -80,6 +80,7 @@ def run_dataset(some_data, index_table, base_fuzzy, points=2, close_threshold=0.
         alpha, indices = get_alpha(test[0], trimmed_data, trimmed_table, base_fuzzy, points, max_iterations=10)
         output = get_output(test[0], trimmed_data, base_fuzzy * alpha, indices)
 
+        # increment appropriate counter to track the number of times the requested number of points was found
         if len(indices) == points:
             points_count[0] += 1
         elif len(indices) == points + 1:
