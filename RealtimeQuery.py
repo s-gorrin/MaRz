@@ -1,5 +1,9 @@
 """
 Query a dataset in real time.
+
+
+TODO: Make more graphical by showing the queries as images?
+      Producing a graph of the outputs at the end to show accuracy improving over time.
 """
 from sklearn.model_selection import train_test_split
 import time
@@ -76,21 +80,14 @@ def send_test_set(test_set):
 
         # ---- POST 1
         global collector
-        sorter = collector.get_sorter()
-        data = collector.get_data()
-        # The only way they should not be equal is if the data has had an extra row
-        #   added that is not in the sorter yet. Thus, get the sorter first, and
-        #   then the data, and if they're not the same, trim the extra row off the data
-        if not (data.shape == sorter.shape):
-            # this happens infrequently, but it can happen and is necessary
-            data = data[:-1]
+        sorter, data = collector.get_sorter_data()
 
         # ---- POST 2
         output = query_input(line[:-1], data, sorter)
         success = abs(target - output) < 0.5
 
         # ---- POST 3
-        print(f"\tfor target {int(target)}, got {output:.1f}{', which is correct!' if success else ''}")
+        print(f" \tfor target {int(target)}, got {output:.1f}{', which is correct' if success else ''}")
 
         # ---- POST 4
         # one query per second seems like a reasonable pace

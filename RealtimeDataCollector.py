@@ -13,6 +13,9 @@ class RealtimeDataCollector:
     def __init__(self, num_attributes):
         self.data_width = num_attributes
 
+        # container for storing/accessing data/sorter as arrays
+        self.arrays_tuple = ([], [])
+
         # setup empty lists
         self.data_lists = []
         self.sort_lists = []
@@ -56,7 +59,7 @@ class RealtimeDataCollector:
             # with a 20/80 split, this means about 4 datapoints added per query
             # this means that the dataset fills shortly before the queries run out,
             #   since there is no point in adding more data after there are no more queries.
-            time.sleep(0.24)
+            time.sleep(0.23)
 
     def add_datum(self, a_datum):
         """
@@ -66,14 +69,16 @@ class RealtimeDataCollector:
 
         POSTCONDITION 1: The a_datum's index is sorted into sort_lists.
         POST 2: The a_datum is appended to the data_lists.
+        POST 3: The most recent in-sync pair of data/sorter is saved to the tuple for external access.
         """
         datum_id = len(self.data_lists[0])
 
         if len(self.data_lists[0]) > 0:
             # the item is sorted into the sort_lists and then added to the data_lists
             for i in range(self.data_width):
-                # ---- POST 1
                 index = np.searchsorted(self.data_lists[i], a_datum[i], sorter=self.sort_lists[i])
+
+                # ---- POST 1
                 # edge case: new index is at the end
                 if index == len(self.sort_lists[i]):
                     self.sort_lists[i].append(datum_id)
@@ -87,6 +92,15 @@ class RealtimeDataCollector:
             for i in range(self.data_width):
                 self.data_lists[i].append(a_datum[i])
                 self.sort_lists[i].append(0)
+
+        # ---- POST 3
+        self.arrays_tuple = (np.array(self.sort_lists).transpose(), np.array(self.data_lists).transpose())
+
+    def get_sorter_data(self):
+        """
+        INTENT: get the data and sorter at the same time to control threading issues
+        """
+        return self.arrays_tuple
 
     def get_data(self):
         """
