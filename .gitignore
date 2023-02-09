@@ -12,11 +12,13 @@
 main.py
 *test.py
 
-# ignore irrelevant directories
+# ignore directories
 /unused/*
 /digit_images/*
 /.idea/*
 /.ipynb_checkpoints
+# MIT liquid code
+/liquid_time_constant_networks/*
 
 # ignore IDE files
 *.iml
