@@ -1,7 +1,9 @@
 from dataset_preprocessing import *
 
+import time  # for timing tests
 
-def get_alpha(an_input, some_data, index_table, base_fuzzy, num_data_points, max_iterations):
+
+def get_alpha(an_input, some_data, index_table, base_fuzzy, num_data_points, max_iterations=10):
     """
     INTENT: use binary search methods to quickly find the hyper-rectangle of some_data which contains
         an_input and num_data_points data points, as defined by an alpha value which multiplies base_fuzzy
@@ -18,22 +20,28 @@ def get_alpha(an_input, some_data, index_table, base_fuzzy, num_data_points, max
 
     RETURN: the alpha value that was found, and the list of indices in the hyper-rectangle defined by alpha
     """
+    time_ga_start = time.perf_counter()  # TIMING ALL OF GET_ALPHA INTERNALLY
     data_width = len(an_input)
 
     # this is mostly for testing since all real data should be numpy arrays
     if type(some_data) is not np.ndarray:
         some_data = np.array(some_data)
 
-    current_alpha = 0.4  # starting alpha is modified here
+    current_alpha = 0.4  # 0.07  # starting alpha is modified here, cut time in half by .4 -> .1 BUT BROKE A TEST???
     best_low_alpha, best_high_alpha = 0, 1
     data_indices = []
     num_iterations = 0
 
+    # TIMER LISTS
+    inter_times = []
+    appending_indices_time = []
     # terminates because num_iterations begins at 0 and is incremented only
     while len(data_indices) != num_data_points and num_iterations < max_iterations:
         a_fuzzy_width = base_fuzzy * current_alpha
         min_fuzzy = an_input - a_fuzzy_width
         max_fuzzy = an_input + a_fuzzy_width
+        # candidate_indices = np.array([-1])
+        # candidate_indices = {-1}  # initialize to non-index to avoid testing on empty set
         indices_in_range = []
 
         for c in range(data_width):
@@ -45,9 +53,35 @@ def get_alpha(an_input, some_data, index_table, base_fuzzy, num_data_points, max
             if table_high == 0:
                 table_high = len(some_data[:, c])
 
-            indices_in_range.append(set(index_table[table_low:table_high, c]))  # values in range of the column
+            index_range = index_table[table_low:table_high, c]
+            # ind_start = time.perf_counter()  # START TIMING APPENDING INDICES
+            """
+            if candidate_indices == {-1}:
+                candidate_indices.update(index_range)
+            else:
+                candidate_indices.intersection_update(index_range)
+            if -1 in candidate_indices:
+                candidate_indices = np.array(index_range)
+            else:
+                candidate_indices = np.intersect1d(candidate_indices, index_range)
+            """
 
+            # ind_end = time.perf_counter()  # END TIMING APPENDING INDICES
+            indices_in_range.append(set(index_table[table_low:table_high, c]))  # values in range of the column
+            # appending_indices_time.append(ind_end-ind_start)
+
+        """
+        loop_indices = candidate_indices       # DELETE ME LATER, I AM ONLY FOR DEBUGGING
+        candidate_indices = indices_in_range[0]
+        for s in indices_in_range:
+            candidate_indices.intersection_update(s)
+        if candidate_indices != loop_indices:
+            print(f"on iteration number {num_iterations}")
+            print("loop:", loop_indices)
+            print("list:", candidate_indices)
+        """
         candidate_indices = set.intersection(*indices_in_range)
+
         if len(candidate_indices) >= num_data_points:
             data_indices = candidate_indices  # this run is the new best, so save the results
             # if the right number of points have been found, stop changing alpha
@@ -59,6 +93,16 @@ def get_alpha(an_input, some_data, index_table, base_fuzzy, num_data_points, max
             current_alpha += (best_high_alpha - best_low_alpha) / 2
 
         num_iterations += 1
+
+    time_ga_end = time.perf_counter()  # END TIME FOR WHOLE FUNCTION COUNTER
+
+    """
+    average_append = sum(appending_indices_time) / len(appending_indices_time)
+    print("in seconds:")
+    print(f"AVERAGE TIME FOR INTER1D: {average_append:.10f}; "
+          f"TOTAL TIME FOR INTER1D: {sum(appending_indices_time):.4f}")
+    print(f"TOTAL TIME FOR GET_ALPHA: {time_ga_end - time_ga_start:.5f}")
+    """
 
     return current_alpha, sorted(list(data_indices))  # data_indices were a set, so return as sorted list
 
