@@ -46,14 +46,14 @@ def get_alpha(an_input, some_data, index_table, base_fuzzy, num_data_points, max
             if table_high == 0:
                 table_high = len(some_data[:, c])
 
-            # note: if this is parallelized, this must be replaced with the list of sets to be intersected
-            #  after the loop, which would entail making a list of sets of indices and intersecting with
-            #  candidate_indices = set.intersect(*indices_in_range) after the parallel executions finish
             index_range = index_table[table_low:table_high, c]
             if c == 0:  # catch the first loop to initialize the indices
                 candidate_indices = index_range
             else:
-                candidate_indices = np.intersect1d(candidate_indices, index_range)
+                candidate_indices = np.intersect1d(candidate_indices, index_range, assume_unique=True)
+                # stop looking if a hyperbox with no contents is found
+                if len(candidate_indices) == 0:
+                    break
 
         if len(candidate_indices) >= num_data_points:
             data_indices = candidate_indices  # this run is the new best, so save the results
