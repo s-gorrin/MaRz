@@ -1,7 +1,7 @@
 from dataset_preprocessing import *
 
 
-def get_alpha(an_input, some_data, index_table, base_fuzzy, num_data_points, max_iterations):
+def get_alpha(an_input, some_data, index_table, base_fuzzy, num_data_points, max_iterations=10):
     """
     INTENT: use binary search methods to quickly find the hyper-rectangle of some_data which contains
         an_input and num_data_points data points, as defined by an alpha value which multiplies base_fuzzy
@@ -15,6 +15,7 @@ def get_alpha(an_input, some_data, index_table, base_fuzzy, num_data_points, max
 
     POST 1: the index_table is used to enable binary search of the dataset for each parameter of an_input
     POST 2: the dataset is searched per column using numpy
+    POST 3: the found indices are intersected to create a list of indices within the hyperbox
 
     RETURN: the alpha value that was found, and the list of indices in the hyper-rectangle defined by alpha
     """
@@ -24,7 +25,7 @@ def get_alpha(an_input, some_data, index_table, base_fuzzy, num_data_points, max
     if type(some_data) is not np.ndarray:
         some_data = np.array(some_data)
 
-    current_alpha = 0.4  # starting alpha is modified here
+    current_alpha = 0.1  # starting alpha is modified here; 0.07 seems to be faster, but 0.1 more precise
     best_low_alpha, best_high_alpha = 0, 1
     data_indices = []
     num_iterations = 0
@@ -34,7 +35,7 @@ def get_alpha(an_input, some_data, index_table, base_fuzzy, num_data_points, max
         a_fuzzy_width = base_fuzzy * current_alpha
         min_fuzzy = an_input - a_fuzzy_width
         max_fuzzy = an_input + a_fuzzy_width
-        indices_in_range = []
+        candidate_indices = np.array([])
 
         for c in range(data_width):
             # do the binary search for the range for this column c
@@ -45,9 +46,15 @@ def get_alpha(an_input, some_data, index_table, base_fuzzy, num_data_points, max
             if table_high == 0:
                 table_high = len(some_data[:, c])
 
-            indices_in_range.append(set(index_table[table_low:table_high, c]))  # values in range of the column
+            index_range = index_table[table_low:table_high, c]
+            if c == 0:  # catch the first loop to initialize the indices
+                candidate_indices = index_range
+            else:
+                candidate_indices = np.intersect1d(candidate_indices, index_range, assume_unique=True)
+                # stop looking if a hyperbox with no contents is found
+                if len(candidate_indices) == 0:
+                    break
 
-        candidate_indices = set.intersection(*indices_in_range)
         if len(candidate_indices) >= num_data_points:
             data_indices = candidate_indices  # this run is the new best, so save the results
             # if the right number of points have been found, stop changing alpha
@@ -60,7 +67,7 @@ def get_alpha(an_input, some_data, index_table, base_fuzzy, num_data_points, max
 
         num_iterations += 1
 
-    return current_alpha, sorted(list(data_indices))  # data_indices were a set, so return as sorted list
+    return current_alpha, list(np.sort(data_indices))  # return data_indices as sorted list
 
 
 class GetAlphaTests(unittest.TestCase):

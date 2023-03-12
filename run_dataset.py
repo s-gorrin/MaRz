@@ -48,7 +48,7 @@ def preprocessing(some_data):
     return index_table, base_fuzzy
 
 
-def run_dataset(some_data, index_table, base_fuzzy, points=2, close_threshold=0.1, start=0, step=1):
+def run_dataset(some_data, index_table, base_fuzzy, points=2, close_threshold=0.1, start=0, step=1, verbose=False):
     """
     INTENT: the procedural work of running a full set of tests on a dataset and printing results
 
@@ -67,7 +67,7 @@ def run_dataset(some_data, index_table, base_fuzzy, points=2, close_threshold=0.
 
     close = 0
     close_lines = []
-    print_lines = False
+    print_lines = verbose
     lines_run = 0
     points_count = [0, 0, 0]
     # gathering both of these together in case of partial runs
@@ -80,6 +80,7 @@ def run_dataset(some_data, index_table, base_fuzzy, points=2, close_threshold=0.
         alpha, indices = get_alpha(test[0], trimmed_data, trimmed_table, base_fuzzy, points, max_iterations=10)
         output = get_output(test[0], trimmed_data, base_fuzzy * alpha, indices)
 
+        # increment appropriate counter to track the number of times the requested number of points was found
         if len(indices) == points:
             points_count[0] += 1
         elif len(indices) == points + 1:
