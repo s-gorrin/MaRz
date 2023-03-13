@@ -11,7 +11,7 @@ import pandas as pd
 import time
 from sklearn.metrics import accuracy_score
 
-from run_dataset import preprocessing, run_dataset
+from run_experiment import cut_in_sequences, run_full_experiment
 
 
 # The following three functions are from the MIT experiments, copied here without alteration
@@ -29,25 +29,14 @@ def read_file(filename):
     data_y = df['Occupancy'].values.astype(np.int32)
     return data_x, data_y
 
-def cut_in_sequences(x, y, seq_len, inc=1):
-
-    sequences_x = []
-    sequences_y = []
-
-    for s in range(0, x.shape[0] - seq_len, inc):
-        start = s
-        end = start + seq_len
-        sequences_x.append(x[start:end])
-        sequences_y.append(y[start:end])
-
-    return np.stack(sequences_x,  axis=1), np.stack(sequences_y, axis=1)
-
 
 def load_data_from_mit():
     """
     INTENT: Load the dataset from the MIT experiment.
 
-    POST 1: The dataset is ready for MaRz usage and returned.
+    PRE 1: The dataset is split into three files.
+
+    POST 1: The dataset is re-joined into a single dataset and returned.
     """
     # from MIT code, get the full dataset
     train_x, train_y = read_file("data/occupancy/datatraining.txt")
@@ -66,24 +55,22 @@ def load_data_from_mit():
 
 
 if __name__ == '__main__':
+    """
+    INTENT: run the occupancy experiment
+    
+    PRECONDITION 1: the data is in the data directory
+    
+    POSTCONDITION 1: the dataset is run through MaRz and results for each input are recorded in y_predicted
+    POST 2: accuracy score is calculated by comparing with y_actual and results are printed to the console
+    POST 3: the time taken in seconds for each step is printed to the console
+    """
     loading_timer = time.time()
     occupancy_dataset = load_data_from_mit()
 
     load_time = time.time() - loading_timer
     print('=' * 20, f"loaded occupancy dataset in {load_time:.2f} seconds", '=' * 20)
 
-    preprocessing_timer = time.time()
-    index_table, base_fuzzy = preprocessing(occupancy_dataset)
-
-    preprocessing_time = time.time() - preprocessing_timer
-    print('=' * 20, f"pre-processed dataset in {preprocessing_time:.2f} seconds", '=' * 20)
-
-    run_timer = time.time()
-    y_actual, y_predicted = run_dataset(occupancy_dataset, index_table, base_fuzzy,
-                                        points=1, close_threshold=0.5, verbose=False)
-
-    run_time = time.time() - run_timer
-    print(f"dataset run time was {run_time:.2f} seconds")
+    y_actual, y_predicted = run_full_experiment(occupancy_dataset)
 
     # Calculate accuracy score
     y_predicted = np.rint(np.array(y_predicted))  # convert to binary array to match targets type

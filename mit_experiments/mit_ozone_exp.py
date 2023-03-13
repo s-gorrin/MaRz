@@ -10,7 +10,7 @@ import numpy as np
 import time
 from sklearn.metrics import f1_score
 
-from run_dataset import preprocessing, run_dataset
+from run_experiment import cut_in_sequences, run_full_experiment
 
 
 # The following three functions are from the MIT experiments, copied here without alteration
@@ -61,20 +61,6 @@ def load_trace():
     return all_x, all_y
 
 
-def cut_in_sequences(x, y, seq_len, inc=1):
-
-    sequences_x = []
-    sequences_y = []
-
-    for s in range(0, x.shape[0] - seq_len, inc):
-        start = s
-        end = start + seq_len
-        sequences_x.append(x[start:end])
-        sequences_y.append(y[start:end])
-
-    return np.stack(sequences_x,  axis=1), np.stack(sequences_y, axis=1)
-
-
 def load_data_from_mit():
     """
     INTENT: Load the dataset from the MIT experiment.
@@ -82,6 +68,7 @@ def load_data_from_mit():
     POST 1: The dataset is ready for MaRz usage and returned.
     """
     data_, targets_ = load_trace()
+
     data_, targets_ = cut_in_sequences(data_, targets_, 1, 1)  # numbers from person.py: 32, 32//2
     data_ = data_.squeeze(0)  # remove extra dimension from sequences
     targets_ = targets_.reshape(targets_.shape[1], 1)  # make it match for concatenation
@@ -91,29 +78,25 @@ def load_data_from_mit():
 
 
 if __name__ == '__main__':
+    """
+    INTENT: run the ozone experiment
+
+    PRECONDITION 1: the data is in the data directory
+
+    POSTCONDITION 1: the dataset is run through MaRz and results for each input are recorded in y_predicted
+    POST 2: F1 score is calculated by comparing with y_actual and results are printed to the console
+    POST 3: the time taken in seconds for each step is printed to the console
+    """
     loading_timer = time.time()
     ozone_dataset = load_data_from_mit()
 
     load_time = time.time() - loading_timer
     print('=' * 20, f"loaded ozone dataset in {load_time:.2f} seconds", '=' * 20)
 
-    preprocessing_timer = time.time()
-    index_table, base_fuzzy = preprocessing(ozone_dataset)
+    y_actual, y_predicted = run_full_experiment(ozone_dataset)
 
-    preprocessing_time = time.time() - preprocessing_timer
-    print('=' * 20, f"pre-processed dataset in {preprocessing_time:.2f} seconds", '=' * 20)
-
-    run_timer = time.time()
-    y_actual, y_predicted = run_dataset(ozone_dataset, index_table, base_fuzzy,
-                                        points=1, close_threshold=0.5, verbose=False)
-
-    run_time = time.time() - run_timer
-    print(f"dataset run time was {run_time:.2f} seconds")
-
-    # TODO (not code) figure out what they're actually doing with the data to get results
-    #  consider asking the MIT team directly for the missing libraries
     # Calculate F1 score
     y_predicted = np.rint(np.array(y_predicted))  # convert to binary array to match targets type
     f1 = f1_score(np.array(y_actual), y_predicted)
-    print(f"F1 score: {f1:.6f}")
+    print(f"F1 score: {f1:.4f}")
     print("MIT F1 score: 0.302 ± 0.0155")  # from page 6 of the paper
