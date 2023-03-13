@@ -1,4 +1,5 @@
 """
+THIS ONE IS CURRENTLY NOT UNDER CONSIDERATION
 Recreating the human activity recognition experiment
 from the MIT liquid time-constant networks paper.
 
