@@ -1,5 +1,5 @@
 """
-Recreating the human activity recognition experiment
+Recreating the power consumption experiment
 from the MIT liquid time-constant networks paper.
 
 The paper can be found at: https://arxiv.org/abs/2006.04439
@@ -28,7 +28,7 @@ def convert_to_floats(feature_col, memory):
     return feature_col, memory
 
 
-def load_crappy_formated_csv():
+def load_crappy_formatted_csv():
 
     all_x = []
     with open("data/power/household_power_consumption.txt", "r") as f:
@@ -75,7 +75,7 @@ def load_data_from_mit():
 
     POST 1: The dataset is ready for MaRz usage and returned.
     """
-    data_, targets_ = load_crappy_formated_csv()
+    data_, targets_ = load_crappy_formatted_csv()
     data_, targets_ = cut_in_sequences(data_, targets_, 1, 1)  # numbers from person.py: 32, 32//2
     data_ = data_.squeeze(0)  # remove extra dimension from sequences
     targets_ = targets_.reshape(targets_.shape[1], 1)  # make it match for concatenation
@@ -102,8 +102,10 @@ if __name__ == '__main__':
     t_min = min(power_dataset[:, -1])
     t_max = max(power_dataset[:, -1])
     print(f"target min/max/range: {t_min:.4f}/{t_max:.4f}/{t_max - t_min:.4f}")
+
     run_timer = time.time()
-    # this should take about an hour, so 17:00
+
+    # run the test portion of the dataset. This is very time-consuming due to the size of the data
     y_actual, y_predicted = run_dataset(power_dataset, index_table, base_fuzzy, step=100,
                                         points=1, close_threshold=0.5, verbose=False)
     """

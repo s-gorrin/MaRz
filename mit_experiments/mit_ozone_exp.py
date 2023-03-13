@@ -1,5 +1,5 @@
 """
-Recreating the human activity recognition experiment
+Recreating the ozone experiment
 from the MIT liquid time-constant networks paper.
 
 The paper can be found at: https://arxiv.org/abs/2006.04439
