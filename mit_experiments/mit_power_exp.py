@@ -1,5 +1,5 @@
 """
-Recreating the human activity recognition experiment
+Recreating the power consumption experiment
 from the MIT liquid time-constant networks paper.
 
 The paper can be found at: https://arxiv.org/abs/2006.04439
@@ -8,15 +8,14 @@ The original code from the paper can be found at: https://github.com/raminmh/liq
 
 import numpy as np
 import time
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 
-from run_dataset import preprocessing, run_dataset
+from run_experiment import cut_in_sequences, run_full_experiment
 from get_alpha_sorted import get_alpha
 from marz_get_output import get_output
 
 
-# The following three functions are from the MIT experiments, copied here without alteration
+# The following two functions are from the MIT experiments, copied here without alteration
 # Except for removing the normalization, which is not necessary for the MaRz process
 def convert_to_floats(feature_col, memory):
     for i in range(len(feature_col)):
@@ -28,7 +27,7 @@ def convert_to_floats(feature_col, memory):
     return feature_col, memory
 
 
-def load_crappy_formated_csv():
+def load_crappy_formatted_csv():
 
     all_x = []
     with open("data/power/household_power_consumption.txt", "r") as f:
@@ -55,27 +54,13 @@ def load_crappy_formated_csv():
     return all_x, all_y
 
 
-def cut_in_sequences(x, y, seq_len, inc=1):
-
-    sequences_x = []
-    sequences_y = []
-
-    for s in range(0, x.shape[0] - seq_len, inc):
-        start = s
-        end = start+seq_len
-        sequences_x.append(x[start:end])
-        sequences_y.append(y[start:end])
-
-    return np.stack(sequences_x, axis=1), np.stack(sequences_y, axis=1)
-
-
 def load_data_from_mit():
     """
     INTENT: Load the dataset from the MIT experiment.
 
     POST 1: The dataset is ready for MaRz usage and returned.
     """
-    data_, targets_ = load_crappy_formated_csv()
+    data_, targets_ = load_crappy_formatted_csv()
     data_, targets_ = cut_in_sequences(data_, targets_, 1, 1)  # numbers from person.py: 32, 32//2
     data_ = data_.squeeze(0)  # remove extra dimension from sequences
     targets_ = targets_.reshape(targets_.shape[1], 1)  # make it match for concatenation
@@ -87,34 +72,25 @@ def load_data_from_mit():
 if __name__ == '__main__':
     loading_timer = time.time()
     power_dataset = load_data_from_mit()
-    unused_train, power_dataset = train_test_split(power_dataset, test_size=.2, random_state=0)
 
     load_time = time.time() - loading_timer
     print('=' * 20, f"loaded power dataset in {load_time:.2f} seconds", '=' * 20)
-
-    preprocessing_timer = time.time()
-    index_table, base_fuzzy = preprocessing(power_dataset)
-
-    preprocessing_time = time.time() - preprocessing_timer
-    print('=' * 20, f"preprocessed dataset in {preprocessing_time:.2f} seconds", '=' * 20)
 
     # display basic target metrics for dataset
     t_min = min(power_dataset[:, -1])
     t_max = max(power_dataset[:, -1])
     print(f"target min/max/range: {t_min:.4f}/{t_max:.4f}/{t_max - t_min:.4f}")
-    run_timer = time.time()
-    # this should take about an hour, so 17:00
-    y_actual, y_predicted = run_dataset(power_dataset, index_table, base_fuzzy, step=100,
-                                        points=1, close_threshold=0.5, verbose=False)
+
+    y_actual, y_predicted = run_full_experiment(power_dataset, split=True, step=100)
+
     """
+    # run a single query from the dataset
     query_input = power_dataset[56]  # arbitrarily chosen line for input
     alpha, indices = get_alpha(query_input[:-1], power_dataset, index_table, base_fuzzy, 1, 10)
     query_output = get_output(query_input[:-1], power_dataset, base_fuzzy*alpha, indices)
-    """
 
-    run_time = time.time() - run_timer
-    print('=' * 20, f"run time was {run_time:.2f} seconds", '=' * 20)
-    # print(f"target: {query_input[-1]}; output: {query_output}")
+    print(f"target: {query_input[-1]}; output: {query_output}")
+    """
 
     # TODO: write output lists to a file as csv or something for reproducibility, since they take so long to make
     squared_error = mean_squared_error(y_actual, y_predicted)
