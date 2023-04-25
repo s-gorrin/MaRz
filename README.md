@@ -8,6 +8,9 @@ is working and not testing files.
 * `numpy` for dataset management
 * `unittest` for testing
 * `sklearn` for splitting and analysis
+#### For specific experiments
+* `matplotlib.pyplot` and `seaborn` for charts
+* `tensorflow` for heart disease comparison
 
 ## How to Use
 The process of making a query with MaRz happens in three phases: Preprocessing, 
