@@ -57,5 +57,5 @@ In order to handle columns where every value is the same, the `base_fuzzy`
 for that column is converted from 0 to 0.000001, to prevent division by 0 downstream.
 
 ## Citation
-All code, unless otherwise indicated, was written by Seth Gorrin at the direction of Dr. Eric Braude.
+This code is currently under anonymous submission for the 2024 AAAI Conference.
 External sources are cited where they are used. 
