@@ -1,4 +1,7 @@
 # Project MaRz
+ 
+ _Machine Learning in Real-Time with Fuzzification_
+
 ### This repository contains the core code files of the MaRz project.
 Files here are working and tested code and are used in the MaRz project.
 Some aspects of the project are still in development, but everything here
